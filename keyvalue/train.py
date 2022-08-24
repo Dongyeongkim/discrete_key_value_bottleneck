@@ -93,6 +93,44 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 
 ## Random initialization
 
+VQEMAMLP = VQEMAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
+for x, (imgs, lbls) in enumerate(testdataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+visualizer_without_scat_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP0', 8)
+
+optimizer = optim.Adam(VQEMAMLP.parameters(), lr=7e-3)
+
+criterion = nn.CrossEntropyLoss()
+
+## Training 
+
+for x, (imgs, lbls) in enumerate(traindataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+    for j in range(1000):
+        optimizer.zero_grad()
+        q_latent_loss, output = VQEMAMLP(imgs)
+        loss = criterion(output, lbls) + q_latent_loss
+        loss.backward()
+        optimizer.step()
+    print(loss)
+    visualizer_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP'+str(x+1), 8)
+
+
+for p in VQEMAMLP.parameters():
+    p.requires_grad = False
+
+for x, (imgs, lbls) in enumerate(testdataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+    visualizer_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP5', 8)
+
+
+# KV+MLP test of two groups
+
+## Random initialization
+
 VQELAMLP = VQELAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
 for x, (imgs, lbls) in enumerate(testdataloader):
     imgs = imgs.cuda()
@@ -125,3 +163,5 @@ for x, (imgs, lbls) in enumerate(testdataloader):
     imgs = imgs.cuda()
     lbls = lbls.cuda()
     visualizer_VQ(imgs, lbls, VQELAMLP, 'VQELAMLP5', 8)
+
+
