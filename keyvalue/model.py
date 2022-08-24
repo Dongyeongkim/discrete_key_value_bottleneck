@@ -191,9 +191,9 @@ class VQMLP(nn.Module):
 # VQ(EMA) + MLP in figure 2
 # Need Codebook loss but not a commitment loss (because input is 2D space points)
 
-class VQELAMLP(nn.Module):
+class VQEMAMLP(nn.Module):
     def __init__(self, feature_num, codebook_num_embeddings, codebook_embeddings_dim):
-        super(VQELAMLP, self).__init__()
+        super(VQEMAMLP, self).__init__()
         self.vq = VectorQuantizerEMA(num_embeddings=codebook_num_embeddings, embedding_dim=codebook_embeddings_dim, decay=0.99) 
         self.MLP = MLP(feature_num=feature_num)
         
