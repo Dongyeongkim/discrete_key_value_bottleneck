@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch import optim
-from model import MLPb, VQMLP, VQELAMLP, KVMLP
+from model import MLPb, VQMLP, VQEMAMLP, KVMLP
 from dataset import clustered2D
 from visualizer import visualizer, visualizer_without_scat, visualizer_VQ, visualizer_without_scat_VQ
 
@@ -130,38 +130,3 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 # KV+MLP test of two groups
 
 ## Random initialization
-
-VQELAMLP = VQELAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-for x, (imgs, lbls) in enumerate(testdataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
-visualizer_without_scat_VQ(imgs, lbls, VQELAMLP, 'VQELAMLP0', 8)
-
-optimizer = optim.Adam(VQELAMLP.parameters(), lr=7e-3)
-
-criterion = nn.CrossEntropyLoss()
-
-## Training 
-
-for x, (imgs, lbls) in enumerate(traindataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
-    for j in range(1000):
-        optimizer.zero_grad()
-        q_latent_loss, output = VQELAMLP(imgs)
-        loss = criterion(output, lbls) + q_latent_loss
-        loss.backward()
-        optimizer.step()
-    print(loss)
-    visualizer_VQ(imgs, lbls, VQELAMLP, 'VQELAMLP'+str(x+1), 8)
-
-
-for p in VQELAMLP.parameters():
-    p.requires_grad = False
-
-for x, (imgs, lbls) in enumerate(testdataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
-    visualizer_VQ(imgs, lbls, VQELAMLP, 'VQELAMLP5', 8)
-
-
