@@ -19,7 +19,7 @@ from einops import rearrange, repeat
 
 class VectorQuantizer(nn.Module):
     def __init__(self, num_embeddings, embedding_dim):
-        super(VectorQuantizer, self).__init__()
+        super().__init__()
         
         self._embedding_dim = embedding_dim
         self._num_embeddings = num_embeddings
@@ -28,31 +28,28 @@ class VectorQuantizer(nn.Module):
         self._embedding.weight.data.uniform_(-1/self._num_embeddings, 1/self._num_embeddings)
 
     def forward(self, inputs):
-        # convert inputs from BCHW -> BHWC
-        inputs = inputs.permute(0, 2, 3, 1).contiguous()
-        input_shape = inputs.shape
-        
-        # Flatten input
-        flat_input = inputs.view(-1, self._embedding_dim)
-        
         # Calculate distances
-        distances = (torch.sum(flat_input**2, dim=1, keepdim=True) 
+        distances = (torch.sum(inputs**2, dim=1, keepdim=True) 
                     + torch.sum(self._embedding.weight**2, dim=1)
-                    - 2 * torch.matmul(flat_input, self._embedding.weight.t()))
+                    - 2 * torch.matmul(inputs, self._embedding.weight.t()))
             
         # Encoding
         encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
+        
         encodings = torch.zeros(encoding_indices.shape[0], self._num_embeddings, device=inputs.device)
         encodings.scatter_(1, encoding_indices, 1)
         
         # Quantize and unflatten
-        quantized = torch.matmul(encodings, self._embedding.weight).view(input_shape)
+        quantized = torch.matmul(encodings, self._embedding.weight).view(-1, 2)
+        # Loss
+        q_latent_loss = F.mse_loss(quantized, inputs.detach())
+        loss = q_latent_loss
+
         quantized = inputs + (quantized - inputs).detach()
         avg_probs = torch.mean(encodings, dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
-        
-        # convert quantized from BHWC -> BCHW
-        return quantized.permute(0, 3, 1, 2).contiguous(), perplexity, encodings
+
+        return quantized, perplexity, q_latent_loss
 
 # VectorQuantizerEMA class - referenced from https://colab.research.google.com/github/zalandoresearch/pytorch-vq-vae/blob/master/vq-vae.ipynb#scrollTo=wkzUw2JW09P7
 
@@ -75,17 +72,11 @@ class VectorQuantizerEMA(nn.Module):
         self._epsilon = epsilon
 
     def forward(self, inputs):
-        # convert inputs from BCHW -> BHWC
-        inputs = inputs.permute(0, 2, 3, 1).contiguous()
-        input_shape = inputs.shape
-        
-        # Flatten input
-        flat_input = inputs.view(-1, self._embedding_dim)
         
         # Calculate distances
-        distances = (torch.sum(flat_input**2, dim=1, keepdim=True) 
+        distances = (torch.sum(inputs**2, dim=1, keepdim=True) 
                     + torch.sum(self._embedding.weight**2, dim=1)
-                    - 2 * torch.matmul(flat_input, self._embedding.weight.t()))
+                    - 2 * torch.matmul(inputs, self._embedding.weight.t()))
             
         # Encoding
         encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
@@ -93,7 +84,7 @@ class VectorQuantizerEMA(nn.Module):
         encodings.scatter_(1, encoding_indices, 1)
         
         # Quantize and unflatten
-        quantized = torch.matmul(encodings, self._embedding.weight).view(input_shape)
+        quantized = torch.matmul(encodings, self._embedding.weight).view(-1,2)
         
         # Use EMA to update the embedding vectors
         if self.training:
@@ -106,7 +97,7 @@ class VectorQuantizerEMA(nn.Module):
                 (self._ema_cluster_size + self._epsilon)
                 / (n + self._num_embeddings * self._epsilon) * n)
             
-            dw = torch.matmul(encodings.t(), flat_input)
+            dw = torch.matmul(encodings.t(), inputs)
             self._ema_w = nn.Parameter(self._ema_w * self._decay + (1 - self._decay) * dw)
             
             self._embedding.weight = nn.Parameter(self._ema_w / self._ema_cluster_size.unsqueeze(1))
@@ -115,9 +106,13 @@ class VectorQuantizerEMA(nn.Module):
         quantized = inputs + (quantized - inputs).detach()
         avg_probs = torch.mean(encodings, dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
+
+        # Loss
+        q_latent_loss = F.mse_loss(quantized, inputs.detach())
+        loss = q_latent_loss
         
         # convert quantized from BHWC -> BCHW
-        return quantized.permute(0, 3, 1, 2).contiguous(), perplexity, encodings
+        return quantized, perplexity, q_latent_loss
 
 
 # Discrete Key-Value Memory - referenced from https://github.com/lucidrains/discrete-key-value-bottleneck-pytorch
@@ -151,16 +146,13 @@ class KeyValueMem(nn.Module):
 # Simple MLP (32, 32)
 
 class MLP(nn.Module):
-    def __init__(self):
-        super(MLP, self).__init__()
-        self.linear1 = nn.Linear(in_features=32, out_features=32)
-        self.activation = nn.Sigmoid()
-        self.output = nn.Linear(in_features=32, out_features=32)
+    def __init__(self, feature_num):
+        super().__init__()
+        self.linear1 = nn.Linear(in_features=feature_num, out_features=32)
+        
     
     def forward(self, x):
         x = self.linear1(x)
-        x = self.activation(x)
-        x = self.output(x)
         return x
 
 
@@ -168,10 +160,10 @@ class MLP(nn.Module):
 
 class MLPb(nn.Module):
     def __init__(self, feature_num):
-        super(MLPb, self).__init__()
+        super().__init__()
         self.linear = nn.Linear(in_features=feature_num, out_features=32)
         self.activation = nn.Sigmoid()
-        self.MLP = MLP()
+        self.MLP = MLP(feature_num=32)
     
     def forward(self, x):
         x = self.linear(x)
@@ -180,21 +172,37 @@ class MLPb(nn.Module):
         return x
 
 
-# VQ + MLP in Figure 2
+# VQ + MLP
 # Need Codebook loss but not a commitment loss (because input is 2D space points)
 
 class VQMLP(nn.Module):
     def __init__(self, feature_num, codebook_num_embeddings, codebook_embeddings_dim):
         super(VQMLP, self).__init__()
         self.vq = VectorQuantizer(num_embeddings=codebook_num_embeddings, embedding_dim=codebook_embeddings_dim) 
-        self.MLP = MLPb(feature_num=feature_num)
+        self.MLP = MLP(feature_num=feature_num)
         
     
     def forward(self, x):
         x = self.vq(x)
-        quantized, index, perplexity = x
+        quantized, perplexity, q_latent_loss = x
         x = self.MLP(quantized)
-        return x
+        return q_latent_loss, x
+
+# VQ(EMA) + MLP in figure 2
+# Need Codebook loss but not a commitment loss (because input is 2D space points)
+
+class VQELAMLP(nn.Module):
+    def __init__(self, feature_num, codebook_num_embeddings, codebook_embeddings_dim):
+        super(VQELAMLP, self).__init__()
+        self.vq = VectorQuantizerEMA(num_embeddings=codebook_num_embeddings, embedding_dim=codebook_embeddings_dim, decay=0.99) 
+        self.MLP = MLP(feature_num=feature_num)
+        
+    
+    def forward(self, x):
+        x = self.vq(x)
+        quantized, perplexity, q_latent_loss = x
+        x = self.MLP(quantized)
+        return q_latent_loss, x
 
 
 # key-value bottleneck + MLP in figure 2
