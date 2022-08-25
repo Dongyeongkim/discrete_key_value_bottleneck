@@ -55,8 +55,8 @@ class VectorQuantizer(nn.Module):
 
 
 class VectorQuantizerEMA(nn.Module):
-    def __init__(self, num_embeddings, embedding_dim, decay, epsilon=1e-5):
-        super(VectorQuantizerEMA, self).__init__()
+    def __init__(self, num_embeddings, embedding_dim, decay, epsilon=1e-1):
+        super().__init__()
         
         self._embedding_dim = embedding_dim
         self._num_embeddings = num_embeddings
@@ -87,7 +87,7 @@ class VectorQuantizerEMA(nn.Module):
         quantized = torch.matmul(encodings, self._embedding.weight).view(-1,2)
         
         # Use EMA to update the embedding vectors
-        if self.training:
+        if self._ema_w.requires_grad == True:
             self._ema_cluster_size = self._ema_cluster_size * self._decay + \
                                      (1 - self._decay) * torch.sum(encodings, 0)
             
