@@ -48,7 +48,6 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -83,8 +82,6 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     Y = lab.cpu().numpy()
     
 
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
-
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
     y_min, y_max = 0, 8
@@ -116,8 +113,6 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-
-    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -182,8 +177,6 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-    
-    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     
     h = .02  # step size in the mesh
