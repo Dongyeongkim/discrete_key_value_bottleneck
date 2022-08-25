@@ -6,6 +6,10 @@ from model import MLPb, VQMLP, VQEMAMLP, KVMLP
 from dataset import clustered2D
 from visualizer import visualizer, visualizer_without_scat, visualizer_VQ, visualizer_without_scat_VQ, visualizer_KV, visualizer_without_scat_KV
 
+# configuration
+
+num_epochs = 10 # key initializing epochs
+
 # Data generation
 
 dataset = clustered2D()
@@ -94,12 +98,14 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 ## Random initialization
 
 VQEMAMLP = VQEMAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-for x, (imgs, lbls) in enumerate(testdataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
-visualizer_without_scat_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP0', 8)
+for i in range(num_epochs):
+    for x, (imgs, lbls) in enumerate(testdataloader):
+        imgs = imgs.cuda()
+        VQEMAMLP(imgs)
 
-optimizer = optim.Adam(VQEMAMLP.parameters(), lr=7e-3)
+VQEMAMLP.vq._ema_w.requires_grad = False
+visualizer_without_scat_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP0', 8)
+optimizer = optim.Adam(VQEMAMLP.parameters(), lr=1e-3)
 
 criterion = nn.CrossEntropyLoss()
 
@@ -111,7 +117,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
     for j in range(1000):
         optimizer.zero_grad()
         q_latent_loss, output = VQEMAMLP(imgs)
-        loss = criterion(output, lbls) + q_latent_loss
+        loss = criterion(output, lbls)
         loss.backward()
         optimizer.step()
     print(loss)
@@ -132,18 +138,29 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 ## Random initialization
 
 KVMLP = KVMLP(feature_num=32, key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32).cuda()
-for x, (imgs, lbls) in enumerate(testdataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
+
+
+for i in range(num_epochs):
+    for x, (imgs, lbls) in enumerate(testdataloader):
+        imgs = imgs.cuda()
+        KVMLP(imgs)
+
+KVMLP.keyvalmem.vq._ema_w.requires_grad = False
 visualizer_without_scat_KV(imgs, lbls, KVMLP, 'KVMLP0', 5)
+
+
 
 for p in KVMLP.parameters():
     p.requires_grad = False
+
+KVMLP.keyvalmem.values.requires_grad = True
+
 optimizer = optim.Adam([KVMLP.keyvalmem.values], lr=3e-3)
 
 criterion = nn.CrossEntropyLoss()
 
-## Training 
+## Training
+
 
 for x, (imgs, lbls) in enumerate(traindataloader):
     imgs = imgs.cuda()
@@ -152,13 +169,10 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         optimizer.zero_grad()
         output = KVMLP(imgs)
         loss = criterion(output, lbls)
-        loss.requires_grad = True
         loss.backward()
         optimizer.step()
     print(loss)
     visualizer_KV(imgs, lbls, KVMLP, 'KVMLP'+str(x+1), 5)
-
-
 
 
 for x, (imgs, lbls) in enumerate(testdataloader):
