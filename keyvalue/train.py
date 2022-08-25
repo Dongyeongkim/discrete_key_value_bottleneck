@@ -178,7 +178,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         optimizer.step()
     print(loss)
     for y, (imgnoscat, lblsnoscat) in enumerate(testdataloader):
-        visualizer_without_scat_KV(imgnoscat, lblsnoscat, KVMLP, 'KVMLP'+str(x+1), 5)
+        visualizer_KV(imgnoscat, lblsnoscat, KVMLP, 'KVMLP'+str(x+1), 5)
 
 
 for x, (imgs, lbls) in enumerate(testdataloader):
