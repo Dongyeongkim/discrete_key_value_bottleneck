@@ -120,7 +120,7 @@ class VectorQuantizerEMA(nn.Module):
 class KeyValueMem(nn.Module):
     def __init__(self, key_num_embeddings, key_embeddings_dim, value_embeddings_dim):
         super(KeyValueMem, self).__init__()
-        self.vq = VectorQuantizerEMA(num_embeddings=key_num_embeddings, embedding_dim=key_embeddings_dim, decay=0.99)
+        self.vq = VectorQuantizerEMA(num_embeddings=key_num_embeddings, embedding_dim=key_embeddings_dim, decay=0.9)
         self.values = nn.Parameter(torch.randn(key_num_embeddings, value_embeddings_dim))
     
     def forward(self, x):
@@ -184,7 +184,7 @@ class VQMLP(nn.Module):
 class VQEMAMLP(nn.Module):
     def __init__(self, feature_num, codebook_num_embeddings, codebook_embeddings_dim):
         super(VQEMAMLP, self).__init__()
-        self.vq = VectorQuantizerEMA(num_embeddings=codebook_num_embeddings, embedding_dim=codebook_embeddings_dim, decay=0.99) 
+        self.vq = VectorQuantizerEMA(num_embeddings=codebook_num_embeddings, embedding_dim=codebook_embeddings_dim, decay=0.9) 
         self.MLP = MLP(feature_num=feature_num)
         
     
@@ -208,39 +208,3 @@ class KVMLP(nn.Module):
         x = self.keyvalmem(x)
         x = self.MLP(x)
         return x
-
-
-# For testing the modules
-
-if __name__ == '__main__':
-
-    if torch.cuda.is_available():
-        a = torch.randn((1,1,1,2)).cuda()
-        MLP_baseline = MLPb(feature_num=2).cuda()
-        VQ_MLP = VQMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-        KV_MLP = KVMLP(key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32).cuda()
-    
-    else:
-        a = torch.randn((1,1,1,2))
-        MLP_baseline = MLPb(feature_num=2)
-        VQ_MLP = VQMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2)
-        KV_MLP = KeyValueMLP(key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32)
-    
-    try:
-        print("MLP Baseline ...")
-        print("output: "+str(MLP_baseline(a)))
-        print("size: "+str(MLP_baseline(a).size()))
-        print("\u2713 MLP Basline - Checked")
-        print("VQ+MLP Baseline ...")
-        print("ouput: "+str(VQ_MLP(a)))
-        print("size: "+str(VQ_MLP(a).size()))
-        print("\u2713 VQ+MLP Basline - Checked")
-        print("KV+MLP Baseline ...")
-        print("output: "+str(KV_MLP(a)))
-        print("size: "+str(KV_MLP(a).size()))
-        print("\u2713 KV+MLP Basline - Checked")
-        print("All baseline works well")
-    
-    except:
-        print("Test has failed. Please check the Traceback")
-        print(traceback.format_exc())
