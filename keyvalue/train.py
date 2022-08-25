@@ -5,16 +5,26 @@ from torch import optim
 from model import MLPb, VQMLP, VQEMAMLP, KVMLP
 from dataset import clustered2D
 from visualizer import visualizer, visualizer_without_scat, visualizer_VQ, visualizer_without_scat_VQ, visualizer_KV, visualizer_without_scat_KV
-
+from tqdm import tqdm
+import numpy as np
 # configuration
 
-num_epochs = 10 # key initializing epochs
+num_epochs = 10000 # key initializing epochs
 
 # Data generation
 
 dataset = clustered2D()
 traindataloader = DataLoader(dataset, batch_size=100, shuffle=False)
 testdataloader = DataLoader(dataset, batch_size=800, shuffle=True)
+
+# Random imitialization in Unit Sqaure
+
+h = .02  # step size in the mesh
+x_min, x_max = 0, 8
+y_min, y_max = 0, 8
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
 
 # MLP test of two groups
@@ -60,9 +70,7 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 
 VQMLP = VQMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
 trainbefore = VQMLP.vq._embedding.weight
-for x, (imgs, lbls) in enumerate(testdataloader):
-    imgs = imgs.cuda()
-    lbls = lbls.cuda()
+
 visualizer_without_scat_VQ(imgs, lbls, VQMLP, 'VQMLP0', 5)
 
 optimizer = optim.Adam(VQMLP.parameters(), lr=7e-3)
@@ -98,10 +106,9 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 ## Random initialization
 
 VQEMAMLP = VQEMAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-for i in range(num_epochs):
-    for x, (imgs, lbls) in enumerate(testdataloader):
-        imgs = imgs.cuda()
-        VQEMAMLP(imgs)
+for i in tqdm(range(num_epochs)):
+    VQEMAMLP(positions)
+        
 
 VQEMAMLP.vq._ema_w.requires_grad = False
 visualizer_without_scat_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP0', 8)
@@ -140,10 +147,8 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 KVMLP = KVMLP(feature_num=32, key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32).cuda()
 
 
-for i in range(num_epochs):
-    for x, (imgs, lbls) in enumerate(testdataloader):
-        imgs = imgs.cuda()
-        KVMLP(imgs)
+for i in tqdm(range(num_epochs)):
+    KVMLP(positions)
 
 KVMLP.keyvalmem.vq._ema_w.requires_grad = False
 visualizer_without_scat_KV(imgs, lbls, KVMLP, 'KVMLP0', 5)
@@ -172,7 +177,8 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         loss.backward()
         optimizer.step()
     print(loss)
-    visualizer_KV(imgs, lbls, KVMLP, 'KVMLP'+str(x+1), 5)
+    for y, (imgnoscat, lblsnoscat) in enumerate(testdataloader):
+        visualizer_without_scat_KV(imgnoscat, lblsnoscat, KVMLP, 'KVMLP'+str(x+1), 5)
 
 
 for x, (imgs, lbls) in enumerate(testdataloader):

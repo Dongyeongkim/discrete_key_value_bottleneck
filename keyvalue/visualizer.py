@@ -18,18 +18,20 @@ def visualizer(inp, lab, model, model_type, leng):
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, m_max]x[y_min, y_max].
     fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
+    Z = model(positions)
     Z = Z.detach()
     Z = Z.cpu().numpy()
     Z = np.argmax(Z, axis=1)
-    
+
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
@@ -41,6 +43,7 @@ def visualizer(inp, lab, model, model_type, leng):
     ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
 
 
 def visualizer_without_scat(inp, lab, model, model_type, leng):
@@ -56,18 +59,20 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, m_max]x[y_min, y_max].
     fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
+    Z = model(positions)
     Z = Z.detach()
     Z = Z.cpu().numpy()
     Z = np.argmax(Z, axis=1)
-    
+
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
@@ -76,6 +81,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
 
 def visualizer_VQ(inp, lab, model, model_type, leng):
     colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
@@ -90,22 +96,20 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, m_max]x[y_min, y_max].
     fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
-    Z = Z[1]
-    Z = Z.detach()
-    Z = Z.cpu().numpy()
+    Z = model(positions)
+    Z = Z[1].cpu().detach()
     Z = np.argmax(Z, axis=1)
-    # Put the result into a color plot
     Z = Z.reshape(xx.shape)
-
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     
@@ -113,6 +117,7 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
 
 def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
@@ -127,27 +132,26 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, m_max]x[y_min, y_max].
     fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
-    Z = Z[1]
-    Z = Z.detach()
-    Z = Z.cpu().numpy()
+    Z = model(positions)
+    Z = Z[1].cpu().detach()
     Z = np.argmax(Z, axis=1)
-    
-    # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
 
 
 def visualizer_KV(inp, lab, model, model_type, leng):
@@ -163,28 +167,29 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
-    # point in the mesh [x_min, m_max]x[y_min, y_max].
-    fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
-    Z = Z.detach()
-    Z = Z.cpu().numpy()
-    Z = np.argmax(Z, axis=1)
 
-    # Put the result into a color plot
+    fig, ax = plt.subplots()
+    Z = model(positions)
+    Z = Z.cpu().detach()
+    Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=cm, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
+
 
 
 
@@ -200,23 +205,28 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
         colorcode.append(colorbook[i])
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
+    
     h = .02  # step size in the mesh
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    x_min, x_max = 0, 8
+    y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
+    
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, m_max]x[y_min, y_max].
     fig, ax = plt.subplots()
-    Z = model(torch.Tensor(np.c_[xx.ravel(), yy.ravel()]).cuda())
-    Z = Z.detach()
-    Z = Z.cpu().numpy()
-    Z = np.argmax(Z, axis=1)
+    
+
     # Put the result into a color plot
+    Z = model(positions)
+    Z = Z.cpu().detach()
+    Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
+    plt.close()
