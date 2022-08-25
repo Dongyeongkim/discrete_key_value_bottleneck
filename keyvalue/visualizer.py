@@ -7,14 +7,14 @@ from matplotlib.colors import LinearSegmentedColormap
 
 def visualizer(inp, lab, model, model_type, leng):
     colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorcode = []
+    for i in Y:
+        colorcode.append(colorbook[i])
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
@@ -35,7 +35,7 @@ def visualizer(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     
@@ -53,10 +53,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
+    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -76,7 +73,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z/10, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -93,6 +90,7 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     colorcode = []
     for i in Y:
         colorcode.append(colorbook[i])
+
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
@@ -126,10 +124,8 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
+
+    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -160,10 +156,10 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-    
     colorcode = []
     for i in Y:
         colorcode.append(colorbook[i])
+    
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
@@ -185,7 +181,7 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=cm, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -200,10 +196,7 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
+    cm = LinearSegmentedColormap.from_list('colorcode', colorbook)
 
     
     h = .02  # step size in the mesh
