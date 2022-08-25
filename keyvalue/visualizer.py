@@ -8,12 +8,11 @@ from matplotlib.colors import LinearSegmentedColormap
 def visualizer(inp, lab, model, model_type, leng):
     colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
     colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
-    
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
+    for i in Y:
+        colorcode.append(colorbook[i])
     
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
