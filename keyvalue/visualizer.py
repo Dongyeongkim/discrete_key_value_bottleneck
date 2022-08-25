@@ -224,7 +224,7 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=cm)
     ax.axis('off')
     
     ax.set_title(model_type)
