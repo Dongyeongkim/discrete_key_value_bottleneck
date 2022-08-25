@@ -6,7 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 # Referenced from https://stats.stackexchange.com/questions/71335/decision-boundary-plot-for-a-perceptron/71339#71339
 
 def visualizer(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     colorcode = []
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
@@ -46,7 +46,7 @@ def visualizer(inp, lab, model, model_type, leng):
 
 
 def visualizer_without_scat(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
@@ -80,7 +80,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     plt.close()
 
 def visualizer_VQ(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
@@ -117,7 +117,7 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     plt.close()
 
 def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
@@ -150,7 +150,7 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
 
 
 def visualizer_KV(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
@@ -180,7 +180,7 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorbook, cmap=cm, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -189,7 +189,7 @@ def visualizer_KV(inp, lab, model, model_type, leng):
 
 
 def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','grey','yellow','violet','grey']
+    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
