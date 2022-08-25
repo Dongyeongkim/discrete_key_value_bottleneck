@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torch import optim
 from model import MLPb, VQMLP, VQEMAMLP, KVMLP
 from dataset import clustered2D
-from visualizer import visualizer, visualizer_without_scat, visualizer_VQ, visualizer_without_scat_VQ
+from visualizer import visualizer, visualizer_without_scat, visualizer_VQ, visualizer_without_scat_VQ, visualizer_KV, visualizer_without_scat_KV
 
 # Data generation
 
@@ -130,3 +130,38 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 # KV+MLP test of two groups
 
 ## Random initialization
+
+KVMLP = KVMLP(feature_num=32, key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32).cuda()
+for x, (imgs, lbls) in enumerate(testdataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+visualizer_without_scat_KV(imgs, lbls, KVMLP, 'KVMLP0', 5)
+
+for p in KVMLP.parameters():
+    p.requires_grad = False
+optimizer = optim.Adam([KVMLP.keyvalmem.values], lr=3e-3)
+
+criterion = nn.CrossEntropyLoss()
+
+## Training 
+
+for x, (imgs, lbls) in enumerate(traindataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+    for j in range(1000):
+        optimizer.zero_grad()
+        output = KVMLP(imgs)
+        loss = criterion(output, lbls)
+        loss.requires_grad = True
+        loss.backward()
+        optimizer.step()
+    print(loss)
+    visualizer_KV(imgs, lbls, KVMLP, 'KVMLP'+str(x+1), 5)
+
+
+
+
+for x, (imgs, lbls) in enumerate(testdataloader):
+    imgs = imgs.cuda()
+    lbls = lbls.cuda()
+    visualizer_KV(imgs, lbls, KVMLP, 'KVMLP5', 5)

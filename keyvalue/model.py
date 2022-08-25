@@ -49,7 +49,7 @@ class VectorQuantizer(nn.Module):
         avg_probs = torch.mean(encodings, dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
 
-        return quantized, perplexity, q_latent_loss
+        return quantized, perplexity, q_latent_loss, encodings
 
 # VectorQuantizerEMA class - referenced from https://colab.research.google.com/github/zalandoresearch/pytorch-vq-vae/blob/master/vq-vae.ipynb#scrollTo=wkzUw2JW09P7
 
@@ -112,7 +112,7 @@ class VectorQuantizerEMA(nn.Module):
         loss = q_latent_loss
         
         # convert quantized from BHWC -> BCHW
-        return quantized, perplexity, q_latent_loss
+        return quantized, perplexity, q_latent_loss, encodings
 
 
 # Discrete Key-Value Memory - referenced from https://github.com/lucidrains/discrete-key-value-bottleneck-pytorch
@@ -121,25 +121,15 @@ class KeyValueMem(nn.Module):
     def __init__(self, key_num_embeddings, key_embeddings_dim, value_embeddings_dim):
         super(KeyValueMem, self).__init__()
         self.vq = VectorQuantizerEMA(num_embeddings=key_num_embeddings, embedding_dim=key_embeddings_dim, decay=0.99)
-        self.values = nn.Parameter(torch.randn(1, key_num_embeddings, value_embeddings_dim))
+        self.values = nn.Parameter(torch.randn(key_num_embeddings, value_embeddings_dim))
     
     def forward(self, x):
         output = self.vq(x)
-        quantized, perplexity, encoding = output
-
-        memory_indices = encoding
-
-        if memory_indices.ndim == 2:
-            memory_indices = rearrange(memory_indices, '...->... 1')
-        
-        memory_indices = rearrange(memory_indices, 'b n h -> b h n')
-
-        values = repeat(self.values, 'h n d -> b h n d', b = memory_indices.shape[0])
-        memory_indices = repeat(memory_indices, 'b h n -> b h n d', d = values.shape[-1])
-        memory_indices = memory_indices.long()
-        memories = values.gather(2, memory_indices)
-        flattened_memories = rearrange(memories, 'b h n d -> b n (h d)')
-        return flattened_memories
+        quantized, perplexity, q_latent_loss, encodings = output
+        encodings = torch.argmax(encodings, dim=1)
+        memory_indices = encodings
+        memories = self.values[memory_indices, :]
+        return memories
 
 
 
@@ -184,7 +174,7 @@ class VQMLP(nn.Module):
     
     def forward(self, x):
         x = self.vq(x)
-        quantized, perplexity, q_latent_loss = x
+        quantized, perplexity, q_latent_loss, encodings = x
         x = self.MLP(quantized)
         return q_latent_loss, x
 
@@ -200,7 +190,7 @@ class VQEMAMLP(nn.Module):
     
     def forward(self, x):
         x = self.vq(x)
-        quantized, perplexity, q_latent_loss = x
+        quantized, perplexity, q_latent_loss, encodings = x
         x = self.MLP(quantized)
         return q_latent_loss, x
 
@@ -208,10 +198,10 @@ class VQEMAMLP(nn.Module):
 # key-value bottleneck + MLP in figure 2
 
 class KVMLP(nn.Module):
-    def __init__(self, key_num_embeddings, key_embeddings_dim, value_embeddings_dim):
+    def __init__(self, feature_num, key_num_embeddings, key_embeddings_dim, value_embeddings_dim):
         super(KVMLP, self).__init__()
         self.keyvalmem = KeyValueMem(key_num_embeddings = key_num_embeddings, key_embeddings_dim = key_embeddings_dim, value_embeddings_dim = value_embeddings_dim)
-        self.MLP = MLP()
+        self.MLP = MLP(feature_num=feature_num)
 
     
     def forward(self, x):
