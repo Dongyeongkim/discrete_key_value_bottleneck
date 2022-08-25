@@ -11,10 +11,6 @@ def visualizer(inp, lab, model, model_type, leng):
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-    for i in Y:
-        colorcode.append(colorbook[i])
-    
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -34,12 +30,12 @@ def visualizer(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -72,7 +68,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -86,9 +82,6 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
 
     cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
@@ -106,12 +99,12 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     Z = Z[1].cpu().detach()
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -141,7 +134,7 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -155,11 +148,6 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-    colorcode = []
-    for i in Y:
-        colorcode.append(colorbook[i])
-    
-    cm = LinearSegmentedColormap.from_list('colorcode', colorcode)
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -176,11 +164,11 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=cm, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -216,7 +204,7 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=cm)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
     ax.axis('off')
     
     ax.set_title(model_type)
