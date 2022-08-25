@@ -180,7 +180,7 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorbook, cmap=cm, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, cmap=cm, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
