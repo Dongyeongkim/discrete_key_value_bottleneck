@@ -1,17 +1,22 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 
 # Referenced from https://stats.stackexchange.com/questions/71335/decision-boundary-plot-for-a-perceptron/71339#71339
 
+cmap = plt.cm.Pastel2
+
 def visualizer(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
     colorcode = []
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
 
+    for i in Y:
+        colorcode.append(colorbook[i])
+    
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
     y_min, y_max = 0, 8
@@ -30,24 +35,26 @@ def visualizer(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
 
 
 def visualizer_without_scat(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
-    
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
+    colorcode = []
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
     
+    for i in Y:
+        colorcode.append(colorbook[i])
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -67,7 +74,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -75,12 +82,13 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     plt.close()
 
 def visualizer_VQ(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
-    
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
+    colorcode = []
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-    
+    for i in Y:
+        colorcode.append(colorbook[i])
 
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -96,22 +104,25 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     Z = Z[1].cpu().detach()
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
 
 def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
+    colorcode = []
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
+    for i in Y:
+        colorcode.append(colorbook[i])
     
 
     h = .02  # step size in the mesh
@@ -129,7 +140,7 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -138,46 +149,45 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
 
 
 def visualizer_KV(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
-    
-    typ = int(model_type[leng:])
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
+    colorcode = []
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
 
+    fig, ax = plt.subplots()
+    typ = int(model_type[leng:])
+    for i in Y:
+            colorcode.append(colorbook[i])
+    
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
     y_min, y_max = 0, 8
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
     positions = torch.Tensor(np.vstack(list(zip(xx.ravel(), yy.ravel())))).cuda()
-    
-
-    # Plot the decision boundary. For that, we will assign a color to each
-
-    fig, ax = plt.subplots()
     Z = model(positions)
     Z = Z.cpu().detach()
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.Paired, edgecolors='black')
+    ax.scatter(X[:, 0], X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
-
-
-
+    
 
 def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
-    colorbook = ['mediumseagreen','yellowgreen','palegoldenrod','coral','cyan','yellow','violet','grey']
+    colorbook = [cmap(0),cmap(1/7),cmap(2/7),cmap(3/7),cmap(4/7),cmap(5/7),cmap(6/7), cmap(1)]
     
     typ = int(model_type[leng:])
     X = inp.cpu().numpy()
     Y = lab.cpu().numpy()
-
+    colorcode = []
+    for i in Y:
+        colorcode.append(colorbook[i])
     
     h = .02  # step size in the mesh
     x_min, x_max = 0, 8
@@ -197,7 +207,7 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Paired)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
     ax.axis('off')
     
     ax.set_title(model_type)

@@ -179,6 +179,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
     print(loss)
     visualizer_KV(imgs, lbls, KVMLP, 'KVMLP'+str(x+1), 5)
 
+KVMLP.keyvalmem.values.requires_grad = False 
 
 for x, (imgs, lbls) in enumerate(testdataloader):
     imgs = imgs.cuda()
