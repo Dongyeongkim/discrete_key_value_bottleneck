@@ -138,7 +138,7 @@ for i in tqdm(range(VQMLP_distil_epochs)):
             optimizer.step()
 
 plt.close()
-plt.plot(np.arange(start=0, stop = len(losslist)), losslist)
+plt.plot(np.arange(start=0, stop = len(distill_losslist)), distill_losslist)
 plt.savefig('VQMLPDistillloss.png')
         
 print("Minimum Distillation loss was: "+str(min(distill_losslist)))
