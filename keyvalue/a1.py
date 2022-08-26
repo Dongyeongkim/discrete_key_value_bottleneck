@@ -25,8 +25,8 @@ for p in studentMLP.parameters():
 
 # make random value vectors to represent or to be represented.
 
-targetD = torch.randn(10).cuda()
-studentD = torch.randn(20, device="cuda", requires_grad=True)
+targetD = torch.randn((1,10)).cuda()
+studentD = torch.randn((1,20), device="cuda", requires_grad=True)
 
 print(studentD)
 
@@ -40,9 +40,9 @@ optimizer = optim.Adam([studentD], lr=3e-3)
 # Calculating target and inp and update / check the performance
 
 loss_set = []
-for i in tqdm(range(50000)):
+for i in tqdm(range(100000)):
     optimizer.zero_grad()
-    target = targetMLP(targetD)
+    target = targetMLP(targetD).softmax(dim=1)
     inp = studentMLP(studentD)
     loss = celoss(inp, target)
     loss.backward()
@@ -60,7 +60,7 @@ output_target = targetMLP(targetD).detach()
 
 testloss = nn.CrossEntropyLoss()
 
-loss = testloss(output_student, output_target)
+loss = testloss(output_student, output_target.softmax(dim=1))
 print(output_student)
 print(output_target)
 print(loss)
