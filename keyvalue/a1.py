@@ -44,19 +44,22 @@ celoss = nn.CrossEntropyLoss()
 optimizer = optim.Adam([studentD], lr=3e-3)
 # Calculating target and inp and update / check the performance
 
+MLP_numepochs = 10
+
 loss_set = []
-for i in tqdm(range(10000)):
-    optimizer.zero_grad()
-    target = targetMLP(targetD).softmax(dim=1)
-    inp = studentMLP(studentD)
-    loss = celoss(inp, target)
-    loss.backward()
-    loss_set.append(loss.detach().cpu())
-    optimizer.step()
+for i in tqdm(range(MLP_numepochs)):
+    for j in range(10000):
+        optimizer.zero_grad()
+        target = targetMLP(targetD).softmax(dim=1)
+        inp = studentMLP(studentD)
+        loss = celoss(inp, target)
+        loss.backward()
+        loss_set.append(loss.detach().cpu())
+        optimizer.step()
 
 plt.plot(np.arange(start=0, stop = len(loss_set)), loss_set)
-plt.show()
 plt.savefig('MLPloss.png')
+plt.close()
 
 studentD.requires_grad_ = False
 
@@ -67,7 +70,7 @@ testloss = nn.CrossEntropyLoss()
 
 loss = testloss(output_student, output_target.softmax(dim=1))
 
-print("Simple MLP distillation: "+str(loss))
+print("Simple MLP distillation: "+str(loss.data))
 
 
 ### Testing VQMLP(Without EMA, VQ is updated with VQloss(q_latent_loss) but MLP has freezed)
@@ -81,13 +84,13 @@ dataset = clustered2D()
 pretraindataloader = DataLoader(dataset, batch_size=800, shuffle=True)
 distilldataloader = DataLoader(dataset, batch_size=100, shuffle=True)
 
-num_epochs = 10
+VQMLP_pretrain_numepochs = 10
 
 optimizer = optim.Adam(targetVQMLP.parameters(), lr=3e-4)
 celoss = nn.CrossEntropyLoss()
 
 losslist = []
-for i in tqdm(range(num_epochs)):
+for i in tqdm(range(VQMLP_pretrain_numepochs)):
     for j, (imgs, lbls) in enumerate(pretraindataloader):
         imgs = imgs.cuda()
         lbls = lbls.cuda()
@@ -101,6 +104,7 @@ for i in tqdm(range(num_epochs)):
 plt.close()
 plt.plot(np.arange(start=0, stop = len(losslist)), losslist)
 plt.savefig('VQMLPPretrainloss.png')
+print("Minimum pretraining loss was: "+str(min(losslist)))
 
 # Setting Student VQMLP - makes only VQ code can be trained
 
@@ -114,14 +118,14 @@ for p in targetVQMLP.parameters():
 
 # Procedure of distilation
 
-distil_epochs = 10
+VQMLP_distil_epochs = 10
 
 optimizer = optim.Adam([StudentVQMLP.vq._embedding.weight], lr=3e-4)
 distill_loss = nn.CrossEntropyLoss()
 
 distill_losslist = []
 
-for i in tqdm(range(distil_epochs)):
+for i in tqdm(range(VQMLP_distil_epochs)):
     for j, (imgs, lbls) in enumerate(distilldataloader):
         imgs = imgs.cuda()
         _, target = targetVQMLP(imgs)
@@ -137,7 +141,7 @@ plt.close()
 plt.plot(np.arange(start=0, stop = len(losslist)), losslist)
 plt.savefig('VQMLPDistillloss.png')
         
-
+print("Minimum Distillation loss was: "+str(min(distill_losslist)))
 
 
 
