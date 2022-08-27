@@ -35,12 +35,12 @@ def visualizer(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, levels=32, cmap=plt.cm.Pastel2)
+    ax.imshow(Z, cmap=plt.cm.Pastel2, vmin=0, vmax=7)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, edgecolors='black')
+    ax.scatter(50*X[:, 0], 50*X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -74,7 +74,7 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
+    ax.imshow(Z, cmap=plt.cm.Pastel2, vmin=0, vmax=7)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -104,12 +104,12 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     Z = Z[1].cpu().detach()
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
+    ax.imshow(Z, cmap=plt.cm.Pastel2, vmin=0, vmax=7)
     ax.axis('off')
     
     
     # Plot also the training points
-    ax.scatter(X[:, 0], X[:, 1], c=colorcode, edgecolors='black')
+    ax.scatter(50*X[:, 0], 50*X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
     plt.close()
@@ -140,7 +140,7 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     Z = np.argmax(Z, axis=1)
     Z = Z.reshape(xx.shape)
 
-    ax.contourf(xx, yy, Z, cmap=plt.cm.Pastel2)
+    ax.imshow(Z, cmap=plt.cm.Pastel2, vmin=0, vmax=7)
     ax.axis('off')
     
     ax.set_title(model_type)
@@ -155,9 +155,6 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     Y = lab.cpu().numpy()
     for i in Y:
         colorcode.append(colorbook[i])
-    
-    
-
 
     fig, ax = plt.subplots()
     typ = int(model_type[leng:])
@@ -213,4 +210,4 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     
     ax.set_title(model_type)
     fig.savefig(model_type+".png")
-    #plt.close()
+    plt.close()
