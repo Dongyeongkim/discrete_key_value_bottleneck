@@ -53,7 +53,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         loss = criterion(output, lbls)
         loss.backward()
         optimizer.step()
-    print(loss)
+    print("MLP: Batch %d, Loss %f" %(x+1, loss.data))
     visualizer(imgs, lbls, MLP_baseline, 'MLP'+str(x+1), 3)
 
 for p in MLP_baseline.parameters():
@@ -88,7 +88,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         loss = criterion(output, lbls) + q_latent_loss
         loss.backward()
         optimizer.step()
-    print(loss)
+    print("VQMLP(without EMA): Batch %d, Loss %f" %(x+1, loss.data))
     visualizer_VQ(imgs, lbls, VQMLP, 'VQMLP'+str(x+1), 5)
 
 
@@ -106,7 +106,7 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 ## Random initialization
 
 VQEMAMLP = VQEMAMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-for i in tqdm(range(num_epochs)):
+for i in tqdm(range(num_epochs), desc="Initializing VQ codes(key)"):
     VQEMAMLP(positions)
         
 
@@ -127,7 +127,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         loss = criterion(output, lbls)
         loss.backward()
         optimizer.step()
-    print(loss)
+    print("VQMLP(EMA): Batch %d, Loss %f" %(x+1, loss.data))
     visualizer_VQ(imgs, lbls, VQEMAMLP, 'VQEMAMLP'+str(x+1), 8)
 
 
@@ -147,7 +147,7 @@ for x, (imgs, lbls) in enumerate(testdataloader):
 KVMLP = KVMLP(feature_num=32, key_num_embeddings=100, key_embeddings_dim=2, value_embeddings_dim=32).cuda()
 
 
-for i in tqdm(range(num_epochs)):
+for i in tqdm(range(num_epochs), desc="Initializing Keys in Key-Value Bottleneck"):
     KVMLP(positions)
 
 KVMLP.keyvalmem.vq._ema_w.requires_grad = False
@@ -176,7 +176,7 @@ for x, (imgs, lbls) in enumerate(traindataloader):
         loss = criterion(output, lbls)
         loss.backward()
         optimizer.step()
-    print(loss)
+    print("KVMLP: Batch %d, Loss %f" %(x+1, loss.data))
     visualizer_KV(imgs, lbls, KVMLP, 'KVMLP'+str(x+1), 5)
 
 KVMLP.keyvalmem.values.requires_grad = False 

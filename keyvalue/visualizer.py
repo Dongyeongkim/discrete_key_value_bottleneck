@@ -42,7 +42,7 @@ def visualizer(inp, lab, model, model_type, leng):
     # Plot also the training points
     ax.scatter(50*X[:, 0], 50*X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    fig.savefig('../images/MLP/'+model_type+".png")
     plt.close()
 
 
@@ -78,7 +78,9 @@ def visualizer_without_scat(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    
+    fig.savefig('../images/MLP/'+model_type+".png")
+
     plt.close()
 
 def visualizer_VQ(inp, lab, model, model_type, leng):
@@ -111,7 +113,10 @@ def visualizer_VQ(inp, lab, model, model_type, leng):
     # Plot also the training points
     ax.scatter(50*X[:, 0], 50*X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    if model_type[:leng] == 'VQEMAMLP':
+        fig.savefig('../images/VQMLP/EMA/'+model_type+".png")
+    else:
+        fig.savefig('../images/VQMLP/nonEMA/'+model_type+".png")
     plt.close()
 
 def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
@@ -144,7 +149,10 @@ def visualizer_without_scat_VQ(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    if model_type[:leng] == 'VQEMAMLP':
+        fig.savefig('../images/VQMLP/EMA/'+model_type+".png")
+    else:
+        fig.savefig('../images/VQMLP/nonEMA/'+model_type+".png")
     plt.close()
 
 
@@ -169,11 +177,12 @@ def visualizer_KV(inp, lab, model, model_type, leng):
     Z = Z.reshape(xx.shape)
 
     ax.imshow(Z, cmap=plt.cm.Pastel2, vmin=0, vmax=7)
+    ax.axis('off')
     
     # Plot also the training points
     ax.scatter(50*X[:, 0], 50*X[:, 1], c=colorcode, edgecolors='black')
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    fig.savefig('../images/KVMLP/'+model_type+".png")
     plt.close()
     
 
@@ -209,5 +218,5 @@ def visualizer_without_scat_KV(inp, lab, model, model_type, leng):
     ax.axis('off')
     
     ax.set_title(model_type)
-    fig.savefig(model_type+".png")
+    fig.savefig('../images/KVMLP/'+model_type+".png")
     plt.close()
