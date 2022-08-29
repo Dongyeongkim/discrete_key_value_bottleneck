@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 import torch.optim as optim
 
 from dataset import clustered2D
@@ -21,7 +22,7 @@ import matplotlib.pyplot as plt
 targetMLP = MLPb(feature_num=10).cuda()
 studentMLP = MLPb(feature_num=20).cuda()
 
-# Set student MLP as freeze state
+# Set the parameters of all MLP as freeze state
 
 for p in targetMLP.parameters():
     p.requires_grad = False
@@ -29,22 +30,48 @@ for p in targetMLP.parameters():
 for p in studentMLP.parameters():
     p.requires_grad = False
 
-
 # make random value vectors to represent or to be represented.
 
-targetD = torch.randn((1,10)).cuda()
+targetD = torch.randn((1,10), device="cuda", requires_grad=True)
 studentD = torch.randn((1,20), device="cuda", requires_grad=True)
+
+# pretrain the targetD
+
+celoss = nn.CrossEntropyLoss()
+targetoptim = optim.Adam([targetD], lr=1e-5)
+
+pretrain_numepochs = 100
+
+loss_set = []
+for i in tqdm(range(pretrain_numepochs)):
+    for j in range(10000):
+        targetoptim.zero_grad()
+        target = targetMLP(targetD)
+        lbls = torch.Tensor([1]).long().cuda()
+        loss = celoss(target, lbls)
+        loss_set.append(loss.data.cpu())
+        loss.backward()
+        targetoptim.step()
+    print(loss.data)
+
+plt.plot(np.arange(start=0, stop = len(loss_set)), loss_set)
+plt.savefig('MLPpretrainloss.png')
+plt.close()
+
+# freeze targetD
+
+targetD.requires_grad = False
 
 # Set the loss function
 
-celoss = nn.CrossEntropyLoss()
+cedistillloss = nn.CrossEntropyLoss()
 
 # set the optimizer 
 
-optimizer = optim.Adam([studentD], lr=3e-3)
+optimizer = optim.Adam([studentD], lr=1e-4)
 # Calculating target and inp and update / check the performance
 
-MLP_numepochs = 10
+MLP_numepochs = 100
 
 loss_set = []
 for i in tqdm(range(MLP_numepochs)):
@@ -52,13 +79,13 @@ for i in tqdm(range(MLP_numepochs)):
         optimizer.zero_grad()
         target = targetMLP(targetD).softmax(dim=1)
         inp = studentMLP(studentD)
-        loss = celoss(inp, target)
+        loss = cedistillloss(inp, target)
         loss.backward()
         loss_set.append(loss.detach().cpu())
         optimizer.step()
 
 plt.plot(np.arange(start=0, stop = len(loss_set)), loss_set)
-plt.savefig('MLPloss.png')
+plt.savefig('MLPdistillloss.png')
 plt.close()
 
 studentD.requires_grad_ = False
@@ -71,78 +98,5 @@ testloss = nn.CrossEntropyLoss()
 loss = testloss(output_student, output_target.softmax(dim=1))
 
 print("Simple MLP distillation: "+str(loss.data))
-
-
-### Testing VQMLP(Without EMA, VQ is updated with VQloss(q_latent_loss) but MLP has freezed)
-
-
-# pretraining VQMLP to 2D datapoint cluster dataset (custom made)
-
-targetVQMLP = VQMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-
-dataset = clustered2D()
-pretraindataloader = DataLoader(dataset, batch_size=800, shuffle=True)
-distilldataloader = DataLoader(dataset, batch_size=100, shuffle=True)
-
-VQMLP_pretrain_numepochs = 10
-
-optimizer = optim.Adam(targetVQMLP.parameters(), lr=3e-4)
-celoss = nn.CrossEntropyLoss()
-
-losslist = []
-for i in tqdm(range(VQMLP_pretrain_numepochs)):
-    for j, (imgs, lbls) in enumerate(pretraindataloader):
-        imgs = imgs.cuda()
-        lbls = lbls.cuda()
-        for k in range(10000):
-            optimizer.zero_grad()
-            q_latent_loss, output = targetVQMLP(imgs)
-            loss = celoss(output, lbls) + q_latent_loss
-            losslist.append(loss.cpu().detach().numpy())
-            loss.backward()
-            optimizer.step()
-plt.close()
-plt.plot(np.arange(start=0, stop = len(losslist)), losslist)
-plt.savefig('VQMLPPretrainloss.png')
-print("Minimum pretraining loss was: "+str(min(losslist)))
-
-# Setting Student VQMLP - makes only VQ code can be trained
-
-StudentVQMLP = VQMLP(feature_num=2, codebook_num_embeddings=100, codebook_embeddings_dim=2).cuda()
-StudentVQMLP.MLP.requires_grad = False
-
-# Setting Target VQMLP - Freeze all things
-
-for p in targetVQMLP.parameters():
-    p.requires_grad = False
-
-# Procedure of distilation
-
-VQMLP_distil_epochs = 10
-
-optimizer = optim.Adam([StudentVQMLP.vq._embedding.weight], lr=3e-4)
-distill_loss = nn.CrossEntropyLoss()
-
-distill_losslist = []
-
-for i in tqdm(range(VQMLP_distil_epochs)):
-    for j, (imgs, lbls) in enumerate(distilldataloader):
-        imgs = imgs.cuda()
-        _, target = targetVQMLP(imgs)
-        for k in range(10000):
-            optimizer.zero_grad()
-            q_latent_loss, inp = StudentVQMLP(imgs)
-            loss = distill_loss(inp, target.softmax(dim=1)) + q_latent_loss
-            distill_losslist.append(loss.cpu().detach().numpy())
-            loss.backward()
-            optimizer.step()
-
-plt.close()
-plt.plot(np.arange(start=0, stop = len(distill_losslist)), distill_losslist)
-plt.savefig('VQMLPDistillloss.png')
-        
-print("Minimum Distillation loss was: "+str(min(distill_losslist)))
-
-
 
 
