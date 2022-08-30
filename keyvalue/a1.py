@@ -38,25 +38,28 @@ studentD = torch.randn((1,20), device="cuda", requires_grad=True)
 # pretrain the targetD
 
 celoss = nn.CrossEntropyLoss()
-targetoptim = optim.Adam([targetD], lr=1e-5)
+targetoptim = optim.Adam([targetD], lr=3e-4)
 
-pretrain_numepochs = 100
+pretrain_numepochs = 25
 
 loss_set = []
 for i in tqdm(range(pretrain_numepochs)):
+    target_set = []
+    plt.ylim(0,0.3)
     for j in range(10000):
         targetoptim.zero_grad()
         target = targetMLP(targetD)
-        lbls = torch.Tensor([1]).long().cuda()
+        lbls = torch.Tensor([5]).long().cuda()
         loss = celoss(target, lbls)
         loss_set.append(loss.data.cpu())
         loss.backward()
         targetoptim.step()
     print(loss.data)
-
-plt.plot(np.arange(start=0, stop = len(loss_set)), loss_set)
-plt.savefig('MLPpretrainloss.png')
-plt.close()
+    
+    targetsoftmax = target.softmax(dim=1).cpu().detach()
+    plt.plot(np.arange(32), targetsoftmax.squeeze())
+    plt.savefig('MLPpretrainDistribution'+str(i)+'.png')
+    plt.close()
 
 # freeze targetD
 
@@ -68,25 +71,33 @@ cedistillloss = nn.CrossEntropyLoss()
 
 # set the optimizer 
 
-optimizer = optim.Adam([studentD], lr=1e-4)
+optimizer = optim.Adam([studentD], lr=3e-4)
 # Calculating target and inp and update / check the performance
 
-MLP_numepochs = 100
 
-loss_set = []
+MLP_numepochs = 25
+
 for i in tqdm(range(MLP_numepochs)):
+    plt.ylim(0,0.3)
+    pred_list = []
     for j in range(10000):
         optimizer.zero_grad()
         target = targetMLP(targetD).softmax(dim=1)
-        inp = studentMLP(studentD)
+        inp = 4*studentMLP(studentD)
+        if torch.argmax(inp, dim=1) == 5:
+            pred_list.append(1)
+        else:
+            pred_list.append(0)
         loss = cedistillloss(inp, target)
         loss.backward()
-        loss_set.append(loss.detach().cpu())
         optimizer.step()
-
-plt.plot(np.arange(start=0, stop = len(loss_set)), loss_set)
-plt.savefig('MLPdistillloss.png')
-plt.close()
+    print(loss.data)
+    print(sum(pred_list)/len(pred_list))
+    plt.plot(np.arange(32), target.cpu().detach().squeeze())
+    inpsoftmax = inp.softmax(dim=1).cpu().detach()
+    plt.plot(np.arange(32), inpsoftmax.squeeze())
+    plt.savefig('MLPDistillDistribution'+str(i)+'.png')
+    plt.close()
 
 studentD.requires_grad_ = False
 
