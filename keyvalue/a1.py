@@ -102,15 +102,20 @@ for i in range(targetD_num):
     plt.savefig('a1/distill/mlp'+str(i)+'.png')
     plt.close()
 
-studentD.requires_grad_ = False
+studentD[:].requires_grad = False
 
-output_student = studentMLP(studentD)
-output_target = targetMLP(targetD).detach()
+loss_avg = []
+for i in range(targetD_num):
 
-testloss = nn.CrossEntropyLoss()
+    output_student = studentMLP(studentD[i])
+    output_target = targetMLP(targetD[i]).detach()
 
-loss = testloss(output_student, output_target.softmax(dim=1))
+    testloss = nn.CrossEntropyLoss()
 
-print("Simple MLP distillation: "+str(loss.data))
+    loss = testloss(output_student, output_target.softmax(dim=1))
 
+    print("Simple MLP distillation: "+str(loss.data))
+    loss_avg.append(loss.data)
+
+print("Average Loss: "+sum(loss_avg)/len(loss_avg))
 
