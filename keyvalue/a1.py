@@ -71,7 +71,8 @@ for i in range(targetD_num):
 
 # freeze targetD
 
-targetD[:].requires_grad = False
+for targetDval in targetD:
+    targetDval.requires_grad = False
 
 MLP_numepochs = 25
 
@@ -102,7 +103,8 @@ for i in range(targetD_num):
     plt.savefig('a1/distill/mlp'+str(i)+'.png')
     plt.close()
 
-studentD[:].requires_grad = False
+for studentDval in studentD:
+    studentDval.requires_grad = False
 
 loss_avg = []
 for i in range(targetD_num):
