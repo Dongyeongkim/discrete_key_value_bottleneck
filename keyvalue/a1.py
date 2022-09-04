@@ -22,6 +22,11 @@ import matplotlib.pyplot as plt
 targetMLP = MLPb(feature_num=10).cuda()
 studentMLP = MLPb(feature_num=20).cuda()
 
+# temp of target and online 
+
+temp_t = 4
+temp_o = 4
+
 # Set the parameters of all MLP as freeze state
 
 for p in targetMLP.parameters():
@@ -32,71 +37,69 @@ for p in studentMLP.parameters():
 
 # make random value vectors to represent or to be represented.
 
-targetD = torch.randn((1,10), device="cuda", requires_grad=True)
-studentD = torch.randn((1,20), device="cuda", requires_grad=True)
+targetD_num = 8
+studentD_num = 16
+
+targetD = [torch.randn((1,10), device="cuda", requires_grad=True) for _ in range(targetD_num)]
+studentD = [torch.randn((1,20), device="cuda", requires_grad=True) for _ in range(studentD_num)]
 
 # pretrain the targetD
 
-celoss = nn.CrossEntropyLoss()
-targetoptim = optim.Adam([targetD], lr=3e-4)
-
 pretrain_numepochs = 25
 
-loss_set = []
-for i in tqdm(range(pretrain_numepochs)):
-    target_set = []
-    plt.ylim(0,0.3)
-    for j in range(10000):
-        targetoptim.zero_grad()
-        target = targetMLP(targetD)
-        lbls = torch.Tensor([5]).long().cuda()
-        loss = celoss(target, lbls)
-        loss_set.append(loss.data.cpu())
-        loss.backward()
-        targetoptim.step()
-    print(loss.data)
+for i in range(targetD_num):
+    celoss = nn.CrossEntropyLoss()
+    targetoptim = optim.Adam([targetD[i]], lr=3e-4)
     
+    loss_set = []
+    for j in tqdm(range(pretrain_numepochs)):
+        target_set = []
+        plt.ylim(0,0.3)
+        for _ in range(10000):
+            targetoptim.zero_grad()
+            target = targetMLP(targetD[i])
+            lbls = torch.Tensor([i]).long().cuda()
+            loss = celoss(temp_t*target, lbls)
+            loss_set.append(loss.data.cpu())
+            loss.backward()
+            targetoptim.step()
+        print(loss.data)
     targetsoftmax = target.softmax(dim=1).cpu().detach()
     plt.plot(np.arange(32), targetsoftmax.squeeze())
-    plt.savefig('MLPpretrainDistribution'+str(i)+'.png')
+    plt.savefig('a1/pretrain/mlp'+str(i)+'.png')
     plt.close()
 
 # freeze targetD
 
-targetD.requires_grad = False
-
-# Set the loss function
-
-cedistillloss = nn.CrossEntropyLoss()
-
-# set the optimizer 
-
-optimizer = optim.Adam([studentD], lr=3e-4)
-# Calculating target and inp and update / check the performance
-
+targetD[:].requires_grad = False
 
 MLP_numepochs = 25
 
-for i in tqdm(range(MLP_numepochs)):
-    plt.ylim(0,0.3)
-    pred_list = []
-    for j in range(10000):
-        optimizer.zero_grad()
-        target = targetMLP(targetD).softmax(dim=1)
-        inp = 4*studentMLP(studentD)
-        if torch.argmax(inp, dim=1) == 5:
-            pred_list.append(1)
-        else:
-            pred_list.append(0)
-        loss = cedistillloss(inp, target)
-        loss.backward()
-        optimizer.step()
-    print(loss.data)
-    print(sum(pred_list)/len(pred_list))
+for i in range(targetD_num):
+    cedistillloss = nn.CrossEntropyLoss()
+    optimizer = optim.Adam([studentD[i]], lr=3e-4)
+    
+    # Calculating target and inp and update / check the performance
+    for j in tqdm(range(MLP_numepochs)):
+        plt.ylim(0,0.3)
+        pred_list = []
+        for _ in range(10000):
+            optimizer.zero_grad()
+            target = targetMLP(targetD[i]).softmax(dim=1)
+            inp = temp_o*studentMLP(studentD[i])
+            if torch.argmax(inp, dim=1) == j:
+                pred_list.append(1)
+            else:
+                pred_list.append(0)
+            loss = cedistillloss(inp, target)
+            loss.backward()
+            optimizer.step()
+        print(loss.data)
+        print(sum(pred_list)/len(pred_list))
     plt.plot(np.arange(32), target.cpu().detach().squeeze())
     inpsoftmax = inp.softmax(dim=1).cpu().detach()
     plt.plot(np.arange(32), inpsoftmax.squeeze())
-    plt.savefig('MLPDistillDistribution'+str(i)+'.png')
+    plt.savefig('a1/distill/mlp'+str(i)+'.png')
     plt.close()
 
 studentD.requires_grad_ = False
