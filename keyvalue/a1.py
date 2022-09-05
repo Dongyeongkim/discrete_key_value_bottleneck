@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 
 ### Testing MLP distillation 
 
+# Mode selection
+
+soft_target = False
 
 # Setting two MLP 
 
@@ -86,7 +89,11 @@ for i in range(targetD_num):
         pred_list = []
         for _ in range(1000):
             optimizer.zero_grad()
-            target = targetMLP(targetD[i]).softmax(dim=1)
+            if soft_target is True:
+                target = targetMLP(targetD[i]).softmax(dim=1)
+            else:
+                target = targetMLP(targetD[i])
+                target = torch.argmax(target, dim=1)
             inp = temp_o*studentMLP(studentD[i])
             loss = cedistillloss(inp, temp_t*target)
             loss.backward()
@@ -100,7 +107,7 @@ for i in range(targetD_num):
             
         print(loss.data)
         print(sum(pred_list)/len(pred_list))
-    plt.plot(np.arange(32), target.cpu().detach().squeeze())
+    plt.plot(np.arange(32), F.one_hot(target,num_classes=32).cpu().detach().squeeze())
     inpsoftmax = inp.softmax(dim=1).cpu().detach()
     plt.plot(np.arange(32), inpsoftmax.squeeze())
     plt.savefig('a1/distill/mlp'+str(i)+'.png')
