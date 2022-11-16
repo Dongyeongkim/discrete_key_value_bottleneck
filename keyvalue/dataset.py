@@ -51,7 +51,7 @@ class clustered2D(Dataset):
         for i, classofg in enumerate(group):
             ax.scatter(classofg[:, 0], classofg[:, 1], marker='o', label=str(i+1))
             plt.show()
-            plt.savefig('dataset.png')
+            plt.savefig('../images/dataset.png')
         print('\u2713 Dataset Generator - Checked')
         self.x_data = inp
         self.y_data = label
